@@ -37,7 +37,6 @@ function add_maker(a) {
 }
 
 var add10 = add_maker(10);
-
 console.log( add10(20) );
 
 var add5 = add_maker(5); // 이 함수는 어느 시점에 평가를 하던 상관이 없는 순수 함수이다.
