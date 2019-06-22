@@ -79,7 +79,7 @@ var users = [
 ];
 
 
-console.log(_get('name')(user[2]));
+console.log(_get('name')(users[2]));
 
 
 function _map(list, mapper) {
