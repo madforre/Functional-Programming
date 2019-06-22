@@ -111,7 +111,7 @@ console.log(
         _filter(users, function(user) { return user.age < 30; }),
         _get('age')));
 
-_go(users,
+_go(users, // curryr 을 사용하면 이 코드를 매우 간결하게 만들 수 있음.
     function(users) {
         return _filter(users, function(user) {
             return user.age >= 30;
@@ -120,7 +120,29 @@ _go(users,
     function(users) {
         return _map(users, _get('age'));
     },
-    console.log
-);
+    console.log);
 
-강의 9분 40초 째.
+    _go(users, // curryr 을 사용하면 이 코드를 매우 간결하게 만들 수 있음.
+        
+        _filter(users, function(user) {
+                return user.age >= 30;
+            
+        }),_map(users, _get('age')),
+        console.log)
+
+
+
+// console.log(_map([1,2,3], function(val) { return val * 2 })); // curryr 적용 전
+
+// var _map = _curryr(_map),
+//     _filter = _curryr(_filter);
+
+// console.log(_map(function(val) { return val * 2 }, [1,2,3])); // curryr 적용 후. 같은 결과를 낸다.
+
+// // 따라서 위 _go 를 아래처럼 바꿀 수 있다.
+
+
+
+
+
+
