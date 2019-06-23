@@ -66,7 +66,7 @@ function _reduce(list, iter, memo) {
 }
 
 var _get = _curryr(function(obj, key) {
-    return obj == null ? underfined : obj[key];
+    return obj == null ? undefined : obj[key];
 })
 
 function _curryr(fn) {
