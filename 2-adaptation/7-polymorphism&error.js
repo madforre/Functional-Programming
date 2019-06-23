@@ -1,3 +1,16 @@
+/* 필요한 함수 및 데이터 */
+
+var users = [
+    { id: 1, name: 'ID', age: 36 },
+    { id: 2, name: 'BJ', age: 32 },
+    { id: 3, name: 'AZ', age: 28 },
+    { id: 4, name: 'QW', age: 30 },
+    { id: 5, name: 'ER', age: 27 },
+    { id: 6, name: 'TY', age: 22 },
+    { id: 7, name: 'GH', age: 25 },
+    { id: 8, name: 'AS', age: 29 }
+];
+
 function _map(list, mapper) {
     var new_list = [];
     _each(list, function(val) {
@@ -27,6 +40,8 @@ function _curryr(fn) {
 
 var _map = _curryr(_map),
     _filter = _curryr(_filter);
+
+// 수업 시작
 
 function _each(list, iter) {
     for (var i = 0; i < list.length; i++) {
@@ -121,7 +136,7 @@ _go(null, // null 을 넣어도 에러가 나지 않고, 빈 배열을 리턴하
     _map(function(v) { return v * v}),
     console.log);
 
-// _keys 만들기
+// _keys 만들기 - _is_object 인지 검사하여 null 에러 안나게.
 
 console.log(Object.keys({ name: 'ID', age: 33 })); // Object.keys는 키만 뽑아주는 함수임.
 console.log(Object.keys([1, 2, 3, 4])); // 배열도 Object이기 때문에 키를 뽑아줌.
@@ -140,3 +155,97 @@ function _keys(obj) {
 
 console.log(_keys(null));
 console.log(_keys(false));
+
+
+// _each의 외부 다형성을 조오옴더 높이기.
+
+// _each({ // 빈 배열 리턴될거임.
+//     13: 'ID',
+//     19: 'HD',
+//     29: 'YD'
+// }, function(name) {
+//     console.log(name);
+// })
+
+function _is_object(obj) {
+    return typeof obj == 'object' && !!obj;
+}
+
+function _keys(obj) {
+    return _is_object(obj) ? Object.keys(obj) : [];
+}
+
+
+function _each(list, iter) { // each를 좀 더 발전시키자.
+    var keys = _keys(list); // 배열이 들어와도 keys가 뽑힐거고, 아니여도 뽑히게 된다.
+    for (var i = 0, len = keys.length; i < len; i++) { // 무조건 올바른 배열이 리턴된다.
+        iter(list[keys[i]]); // 루프가 아무런 문제 없이 흘러간다 ~
+    }
+    return list;
+}
+
+_each({ // each 의 다형성을 높여주었으므로, 이 코드 뿐만 아니라, map, filter에도 
+        // 다형성이 높아져 적용된다.
+    13: 'ID',
+    19: 'HD',
+    29: 'YD'
+}, function(name) {
+    console.log(name);
+})
+
+
+console.log( _map({ // 인자의 데이터형이 무엇이냐에 따라 내부 동작을 다 지원하도록
+    // 최대한 다형성이 높게 끔 작성을 하고, 인자가 하나 들어온다면
+    // 함수를 리턴한다는 식으로 프로그래밍을 많이 합니다.
+    // 어떠한 데이터가 들어오던지, 코드가 흘러가도록 만듭니다.
+    // 함수형 프로그래밍 ㅇㅇ 다양한 부분에서 유리한 점이 많이 생긴다.
+    13: 'ID',
+    19: 'HD',
+    29: 'YD'
+}, function(name) {
+    return name.toLowerCase();
+}) );
+
+_go({
+    13: 'AW',
+    19: 'SD',
+    29: 'YR'
+    },
+    _map(function(name) {
+        return name.toLowerCase();
+    }),
+    console.log)
+
+_go(users, // users가 null 이더라도 에러가 나지않고, 문제없이 코드가 흘러갑니다.
+    _map(function(user) {
+        return user.name;
+    }),
+    _map(function(name) {
+        return name.toLowerCase();
+    }),
+    console.log)
+
+// 형을 굉장히 엄격하게 체크하면서 프로그래밍하는 방식도 있지만,
+// 이렇게 다형성을 극대화 시키면서 프로그래밍 하는 방법도 있습니다.
+
+// 이런 개발 방식에서는 개발자가 map 함수를 쓰면서 map 에 집어넣을 데이터가
+// 어떻게 생겼는지를 개발자가 알기 때문에 보조함수를 통해서
+// 다양한 데이터를 처리하게끔 한다.
+
+_go({
+    1: users[0],
+    3: users[2], // 돌림직한 데이터가 어떻게 생겼던지 상관없음.
+    5: users[4]
+    },
+    _map(function(user) { // 개발자가 원하는 속성을 선택을 할 수 있다.
+        return user.name.toLowerCase(); // 데이터가 무엇인지 안다면, 입맛대로 데이터를 처리 가능.
+    }), // 즉 어떠한 데이터건 간에 다양하게 처리가 가능하다는 것!
+    console.log)
+
+// 데이터가 무엇이냐에 따라서 보조함수를 마음껏 변경할 수 있기 때문에.
+// 개발자가 데이터를 알고있다면 보조함수로 다양한 데이터를 원하는 대로 처리할 수 있음.
+// 다형성!!
+
+// 지금까지 명령형 코드에서 어떻게 선언형 코드로 전환해왔는가. 에 대해 알아보았다.
+
+// 이제 컬렉션 중심 위주의 함수형 프로그래밍에 대해서 알아볼 것이다.

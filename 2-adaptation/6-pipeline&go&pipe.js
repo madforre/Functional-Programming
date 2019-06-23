@@ -186,4 +186,4 @@ _go(users, // 좀더 간단하게.
     _map(_get('age')),
     console.log);
 
-// curryr 을 통해서 필터와 맵을 
+// curryr 을 통해서 필터와 맵을 _go 함수 내에서 더욱 간단히 햐였다.
