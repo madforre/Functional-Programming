@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>3. 컬렉션 중심 프로그래밍</title>
+    <title>Document</title>
+    <script src="../_.js"></script>
+</head>
+<body>
+
+<script>
+
+// 컬렉션 중심 프로그래밍의 4가지 유형과 함수
+
+// 1. 수집하기 - map, values, pluck 등
+// 2. 거르기 - filter, reject, compact, without 등
+// 3. 찾아내기 - find, some, every 등
+// 4. 접기 - reduce, min, max, group_by, count_by
+
+var users = [
+    { id: 1, name: 'ID', age: 36 },
+    { id: 2, name: 'BJ', age: 32 },
+    { id: 3, name: 'AZ', age: 28 },
+    { id: 4, name: 'QW', age: 30 },
+    { id: 5, name: 'ER', age: 27 },
+    { id: 6, name: 'TY', age: 22 },
+    { id: 7, name: 'GH', age: 25 },
+    { id: 8, name: 'AS', age: 29 }
+];
+
+// 1. 수집하기 - map
+console.log(
+    _map(users, function(user) {
+        return user.name; // 내부에 있는 값을 수집해오는 함수임.
+    })
+)
+
+function _identity(val) {
+    return val; // 어따쓰는고 하니 values의 map에서 mapper로 쓰는구나.
+}
+
+// function _values(data) {
+//     return _map(data, function(val) {
+//         return val;
+//     })
+// }
+
+function _values(data) { // object 인 경우에 의미가 있는 함수.
+    return _map(data, _identity);
+}
+
+var a = 10;
+console.log( _identity(a) );
+
+
+// console.log(users[0]);
+// console.log(_keys(users[0]));
+console.log(_values(users[0]));
+
+// curryr로 만든 map이면 아래도 가능.
+var _values = _map(_identity); 
+// mapper 함수를 리턴한다. 이제 데이터를 받을 준비 완료!
+// list를 인자로 받으면 실행되는 함수 탄생.
+
+console.log ( _map(_identity)(users[0]) );
+console.log ( _values(users[0]) ); // 둘다 같은 결과를 리턴한다.
+
+
+
+// function _pluck(data, key) {
+//     return _map(data, function(obj) {
+//         return obj[key]; // get 함수로 대체 가능.
+//     })
+// }
+
+function _pluck(data, key) {
+    return _map(data, _get(key));
+}
+
+_pluck(users, 'age'); // 배열의 키에 관련된 값들을 수집하는 함수임.
+// [33, 22, 11, ...]
+// 내부에 있는 애들을 수집하려면 map 쓴다.
+
+console.log( _pluck(users, 'age') );
+console.log( _pluck(users, 'name') );
+console.log( _pluck(users, 'id') );
+// 값들을 굉장히 편리하게, 실용적으로 뽑아올 수 있음.
+
+// 데이터 수집하는 친구들은 map을 통해서 만들 수 있다.
+
+
+
+
+
+
+</script>
+
+</body>
+</html>

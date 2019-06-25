@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>3. 컬렉션 중심 프로그래밍</title>
+    <title>Document</title>
+    <script src="../_.js"></script>
+</head>
+<body>
+<script>
+
+var users = [
+    { id: 1, name: 'ID', age: 36 },
+    { id: 2, name: 'BJ', age: 32 },
+    { id: 3, name: 'AZ', age: 28 },
+    { id: 4, name: 'QW', age: 30 },
+    { id: 5, name: 'ER', age: 27 },
+    { id: 6, name: 'TY', age: 22 },
+    { id: 7, name: 'GH', age: 25 },
+    { id: 8, name: 'AS', age: 29 }
+];
+
+// 2. 거르기 - filter
+
+console.log(
+    _filter(users, function(user) {
+        return user.age > 30;
+    })
+)
+
+// function _reject(data, predi) {
+//     return _filter(data, function(val) {
+//         return !predi(val);
+//     })
+// }
+
+function _negate(func) { // hahahah 굉장히 재밌는 함수다.
+    return function(val) { 
+        return !func(val);
+    }
+} // 함수가 함수를 리턴하거나, 함수를 값으로 다룬다거나,
+// 평가 시점들을 다루거나, 함수가 함수를 대신 실행한다던지,
+// 인자로 받은 함수를 실행한 다음에 결과를 반대로 바꾼다음 리턴한다던지..
+// 이런식으로 함수의 응용과 조합을 강조하는 것이 함수형 프로그래밍이다.
+
+// 이 재밌는 함수를 쓰면 더욱 간결해진다.
+function _reject(data, predi) {
+    return _filter(data, _negate(predi));
+}
+
+console.log( // 반대로 true가 나오는 애들을 제외시킴.
+// 위임된 조건문에서 원래 트루가 나오는걸 반대로 false로 뒤집음.
+    _reject(users, function(user) {
+        return user.age > 30;
+    })
+)
+
+
+
+// 있는걸 그대로 리턴해줘! _identity !
+// 이 친구를 사용해서 쉬운 compact 함수까지 만들 수 있다.
+var _compact = _filter(_identity);
+// _identity 라는 정말 아무것도 아닌 것 같은 함수가..
+// 굉장히 실용적이고 아름답군요!!
+
+// _negate 도 마찬가지로 멋짐.
+// 굉장히 다양하게 함수들을 조합하면서 
+// 약간만 변경된 함수들을 많이 만드는게 함수 진영의 목표임.
+
+// 복잡한 기능을 가진 뚱뚱한 함수를 열 개 만드는 것보다
+// 서로다른 가벼운 함수를 만드는 것이 프로그래밍을 하면서
+// 더 유리하다.
+
+console.log( // 긍정적인 값들만 남긴다. true만 남긴다. 나머진 거른다.
+_compact([1, 2, 3, false, null, {}])); // 
+
+
+
+
+
+
+
+</script>
+
+</body>
+</html>

@@ -1,24 +1,17 @@
-function _each(list, iter) {
-    for (var i = 0; i < list.length; i++) {
-        iter(list[i]) 
+function _is_object(obj) {
+    return typeof obj == 'object' && !!obj;
+}
+
+function _keys(obj) {
+    return _is_object(obj) ? Object.keys(obj) : [];
+}
+
+function _each(list, iter) { // each를 좀 더 발전시키자.
+    var keys = _keys(list); // 배열이 들어와도 keys가 뽑힐거고, 아니여도 뽑히게 된다.
+    for (var i = 0, len = keys.length; i < len; i++) { // 무조건 올바른 배열이 리턴된다.
+        iter(list[keys[i]]); // 루프가 아무런 문제 없이 흘러간다 ~
     }
     return list;
-}
-
-function _map(list, mapper) {
-    var new_list = [];
-    _each(list, function(val) {
-        new_list.push(mapper(val));
-    });
-    return new_list;
-}
-
-function _filter(list, f) {
-    var new_list = [];
-    _each(list, function(val) {
-        if (f(val)) new_list.push(val);
-    });
-    return new_list;
 }
 
 function _curry(fn) {
@@ -33,6 +26,24 @@ function _curryr(fn) {
     }
 }
 
+function _map(list, mapper) {
+    var new_list = [];
+    _each(list, function(val) {
+        new_list.push(mapper(val));
+    });
+    return new_list;
+}
+var _map = _curryr(_map);
+
+function _filter(list, predi) {
+    var new_list = [];
+    _each(list, function(val) {
+        if (predi(val)) new_list.push(val);
+    });
+    return new_list;
+}
+var _filter = _curryr(_filter);
+
 var _get = _curryr(function(obj, key) {
     return obj == null ? underfined : obj[key];
 });
@@ -45,14 +56,18 @@ var subr = _curryr(function(a, b) {
     return a - b;
 });
 
+function _identity(val) {
+    return val;
+}
 
-var users = [ // dummy data
-    { id: 1, name: 'ID', age: 36 },
-    { id: 2, name: 'BJ', age: 32 },
-    { id: 3, name: 'AZ', age: 28 },
-    { id: 4, name: 'QW', age: 30 },
-    { id: 5, name: 'ER', age: 27 },
-    { id: 6, name: 'TY', age: 22 },
-    { id: 7, name: 'GH', age: 25 },
-    { id: 8, name: 'AS', age: 29 }
-];
+var _values = _map(_identity);
+
+function _pluck(data, key) {
+    return _map(data, _get(key));
+}
+
+function _reject(data, predi) {
+    return _filter(data, function(val) {
+        return !predi(val);
+    })
+}
