@@ -56,6 +56,36 @@ var subr = _curryr(function(a, b) {
     return a - b;
 });
 
+function _rest(list, num) {
+    var slice = Array.prototype.slice; // Array 만 사용 가능한 것을 유사배열도 가능하게 만들었다.
+    return slice.call(list, num || 1);
+}
+
+function _reduce(list, iter, memo) {
+    if (arguments.length == 2) {
+        memo = list[0];
+        list = _rest(list);
+    }
+    _each(list, function(list_val) {
+        memo = iter(memo, list_val);
+    });
+    return memo;
+}
+
+function _pipe() {
+    var fns = arguments;
+    return function(arg) {
+        return _reduce(fns, function(arg, fn) {
+            return fn(arg);
+        }, arg)
+    }
+}
+
+function _go(arg) {
+    var fns = _rest(arguments);
+    return _pipe.apply(null, fns)(arg);
+}
+
 function _identity(val) {
     return val;
 }
@@ -66,8 +96,36 @@ function _pluck(data, key) {
     return _map(data, _get(key));
 }
 
+function _negate(func) {
+    return function(val) {
+        return !func(val);
+    }
+}
+
 function _reject(data, predi) {
-    return _filter(data, function(val) {
-        return !predi(val);
-    })
+    return _filter(data, _negate(predi));
+}
+
+function _find(list, predi) { 
+    var keys = _keys(list);
+    for (var i = 0, len = keys.length; i < len; i++) {
+        var val = list[keys[i]];
+        if (predi(val)) return val; // 조건에 만족하는, 첫번째 걸리는 놈의 값을 리턴함.
+    }
+}
+
+function _find_index(list, predi) { 
+    var keys = _keys(list);
+    for (var i = 0, len = keys.length; i < len; i++) {
+        if (predi(list[keys[i]])) return i;
+    }
+    return -1;
+}
+
+function _some(data, predi) {
+    return _find_index(data, predi || _identity) != -1;
+}
+
+function _every(data, predi) {
+    return _find_index(data, _negate(predi || _identity)) == -1;
 }

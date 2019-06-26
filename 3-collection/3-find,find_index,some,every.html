@@ -11,6 +11,169 @@
 <body>
 <script>
 
+var users = [
+    { id: 1, name: 'ID', age: 36 },
+    { id: 2, name: 'BJ', age: 32 },
+    { id: 3, name: 'AZ', age: 28 },
+    { id: 4, name: 'QW', age: 30 },
+    { id: 5, name: 'ER', age: 27 },
+    { id: 6, name: 'TY', age: 22 },
+    { id: 7, name: 'GH', age: 25 },
+    { id: 8, name: 'AS', age: 29 }
+];
+
+// 3. - 찾아내기 - find
+
+// _each 함수를 쪼금만 손보면 _find가 됩니다.
+function _find(list, predi) { 
+    var keys = _keys(list);
+    for (var i = 0, len = keys.length; i < len; i++) {
+        var val = list[keys[i]];
+        if (predi(val)) return val; // 첫번째 걸리는 놈 리턴함.
+    }
+    // 찾지 못했다면 아무것도 리턴하지 않으므로 undefined가 함수의 값이 되겠지?
+}
+
+console.log( // find는 첫번째로 만나는 값 하나만을 리턴한다.
+    _find(users, function(user) {
+        return user.age > 30;
+    }),
+    _find(users, function(user) {
+        return user.name == "BJ";
+    })
+)
+
+// _find를 쪼금만 고치면 _find_index가 됩니다.
+function _find_index(list, predi) { 
+    var keys = _keys(list);
+    for (var i = 0, len = keys.length; i < len; i++) {
+        if (predi(list[keys[i]])) return i; // 첫번째 걸리는 놈의 인덱스를 리턴함.
+    }
+    return -1; // 인덱스 값을 찾지 못했으면 자바스크립트 특성상 -1을 리턴하는데, 고걸 따라해주자.
+}
+
+console.log(
+    _find_index(users, function(user) {
+        return user.id == 20;
+    }),
+    _find_index(users, function(user) {
+        return user.id == 5;
+    })
+);
+
+console.log( // 이런식으로 _get이랑 섞어도 쓸 수 있겠죠?
+    _get(_find(users, function(user) {
+        return user.id == 3;
+    }), 'name')
+);
+
+// find + @ 함수도 커리로 만들어주자!
+
+var _find = _curryr(_find),
+    _find_index = _curryr(_find_index);
+
+_go(users, // 훨씬 읽기 쉽고 이해하기 쉬운 코드가 됩니다.
+    _find(function(user) {return user.id == 5;}),
+    _get('name'),
+    console.log);
+
+_go(users, // find_index도 curryr로 감싸줬으니 이제 아래처럼 가능.
+    _find_index(function(user) {return user.id == 5;}),
+    console.log);
+
+
+// 이제 some과 every도 만들어보자!!!
+function _some(data, predi) {
+    return _find_index(data, predi) != -1;
+    // 인덱스가 -1만 아니면 트루이게 하면됨ㅋ
+    // -1이 아닌 값이 나온다면 얘는 true가 된다.
+}
+// 하나라도 만족하는 값이 나오면 트루가 되는게 _some.
+
+
+function _negate(func) { // 재밌는(기묘한) 함수가 다시 출현
+    return function(val) {
+        return !func(val);
+    }
+}
+
+// 모든 값이 조건에 만족하면 true가 나오는 _every 함수.
+function _every(data, predi) { // _negate를 every에 써준다.
+    return _find_index(data, _negate(predi)) == -1;
+    // (개발자가 넘겨준 값이 false가 되는 인덱스)를 찾는 동작이 된다.
+    // 하나도 false된 값을 찾지 못했다. 그럼 true.
+    // 하나라도 false라고 평가되는 값을 찾아냈다면, 0 ~ length -1 까지의 값이 나오겠죠
+    // 그럼 false가 됩니당.
+}
+
+console.log(_some([1, 2, 5, 10, 20], function(val) {
+    return val % 10; // 조건에 만족하는 값이 하나라도 있으면 true가 된다.
+}))
+
+console.log(_every([1, 2, 5, 10, 20], function(val) {
+    return val % 10; // 모든 값이 조건에 만족해야 true가 나온다.
+    // 요건 false 나오겠지?
+}))
+
+console.log(_every([4, 5, 6, 10, 20], function(val) {
+    return val > 3; // 모든 값이 조건에 만족해야 true가 나온다. 요건 트루다.
+}))
+
+// some 과 every는 생략을 해도 동작해야 된다.
+console.log(
+    _some([1, 2, 0, 10], _identity) // 하나라도 있으면 트루 나와야 되니까 트루나옴.
+    // predicate 없어서 에러납니다. 따라서 -identity 써줘야댐.
+)
+
+console.log(
+    _some([null, false, 0], _identity) // 전부 트루값아니므로 펄스나옴.
+    // 역시 predi 없어서 에러남. 있는걸 그대로 리턴해주는 _identity 써줘야됨.
+    // 이렇게하면 원하는 결과를 얻을 수 있음. 하지만 생략해주면 좋겠죠?
+)
+
+// 원래 함수를 조금만 고쳐보자.
+function _some(data, predi) {
+    return _find_index(data, predi || _identity) != -1;
+}
+// 굉장히 간결해졌네용 
+// predi를 안넣고, 그냥 데이터 값만 넣었을 때에도 그 자체를 찾아줄 수 있음.
+
+// every도 마찬가지임.
+function _every(data, predi) {
+    return _find_index(data, _negate(predi || _identity)) == -1;
+    // 아이덴티티.. 이 작은 함수가 별것도 아닌데 굉장히 실용적으로 자주 쓰이네욤.
+} // 이런식으로 함수들을 조합하는 것이 함수형 프로그래밍 입니다.
+
+console.log( // 이제 predi 없이도 잘 작동합니다!!
+    _every([1, 2, 0, 10])
+)
+
+console.log(
+    _every([null, false, 0])
+)
+
+console.log(
+    _every([null, false, 1])
+)
+
+console.log(
+    _every([1, 2, 10])
+)
+
+console.log( // users 안에 20살 미만의 사람이 있는가 확인해보자!
+    _some(users, function(user) {
+        return user.age < 20;
+    })
+)
+
+// some, find, find_index나 다 고차함수로 사용되고 보조함수를 받기 때문에
+// 일반적인 find나 indexOf 보다 보조함수를 받아서 predi에 따라
+// 만족하는 값이 있느냐 없느냐 등.. 
+// 내가 로직을 고르는 것과 같다.
+// 내가 원하는 대로 조건식을 만들어서 조합하고 평가할 수 있음.
+
+// 보조함수를 조합하면서 로직을 완성해나가는 것이 함수형 프로그래밍입니다!!!
+
 </script>
 
 </body>
