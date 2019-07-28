@@ -9,7 +9,8 @@ function _keys(obj) {
 function _each(list, iter) { // each를 좀 더 발전시키자.
     var keys = _keys(list); // 배열이 들어와도 keys가 뽑힐거고, 아니여도 뽑히게 된다.
     for (var i = 0, len = keys.length; i < len; i++) { // 무조건 올바른 배열이 리턴된다.
-        iter(list[keys[i]]); // 루프가 아무런 문제 없이 흘러간다 ~
+        iter(list[keys[i]], keys[i]); // 루프가 아무런 문제 없이 흘러간다 ~
+        // 덤으로 iter에 keys[i]를 넘겨주자.
     }
     return list;
 }
@@ -28,8 +29,8 @@ function _curryr(fn) {
 
 function _map(list, mapper) {
     var new_list = [];
-    _each(list, function(val) {
-        new_list.push(mapper(val));
+    _each(list, function(val, key) {
+        new_list.push(mapper(val, key));
     });
     return new_list;
 }
@@ -54,6 +55,10 @@ var add = _curry(function(a, b) {
 
 var subr = _curryr(function(a, b) {
     return a - b;
+});
+
+var pairs = _map(function(val, key){
+    return [key, val];
 });
 
 function _rest(list, num) {
@@ -102,9 +107,9 @@ function _negate(func) {
     }
 }
 
-function _reject(data, predi) {
+var _reject = _curryr(function(data, predi) {
     return _filter(data, _negate(predi));
-}
+});
 
 function _find(list, predi) { 
     var keys = _keys(list);
@@ -129,3 +134,29 @@ function _some(data, predi) {
 function _every(data, predi) {
     return _find_index(data, _negate(predi || _identity)) == -1;
 }
+
+function _push(obj, key, val) {
+    (obj[key] = obj[key] || []).push(val);
+    return obj;
+}
+
+var _group_by = _curryr(function(data, iter) {
+    return _reduce(data, function(grouped, val) {
+        return _push(grouped, iter(val), val);
+    }, {});
+});
+
+var _head = function(list) {
+    return list[0];
+};
+
+var _inc = function(count, key) {
+    count[key] ? count[key]++ : count[key] = 1;
+    return count;
+};
+
+var _count_by = _curryr(function(data, iter) {
+    return _reduce(data, function(count, val) {
+        return _inc(count, iter(val));
+    }, {});
+});
