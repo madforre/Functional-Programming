@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>4. 자바스크립트에서의 지연 평가</title>
+  <!-- <script src="js/partial.js"></script> -->
+  
+</head>
+<body>
+
+<script>
+// partial.js를 따로 받지는 않았음. 에러날거임.
+// 아래 코드를 통해 어떻게 동작하는지만 쭈욱 살펴보자.
+
+
+// 지연 평가를 시작 시키고 유지 시키는(이어 가는) 함수
+  // 1. map
+  // 2. filter, reject
+
+  // 끝을 내는 함수
+  // 1. take
+  // 2. some, every, find
+
+var mi = 0;
+var fi = 0;
+_.go(
+  _.range(100),
+  _.map(function(val) {
+    ++mi;
+    return val * val;
+  }),
+  _.filter(function(val) {
+    ++fi;
+    return val % 2;
+  }),
+  _.some(function(val) {
+    return val > 100;
+  }),
+  console.log);
+console.log(mi, fi);
+var mi = 0;
+var fi = 0;
+_.go(
+  _.range(100),
+  L.map(function(val) {
+    ++mi;
+    return val * val;
+  }),
+  L.filter(function(val) {
+    ++fi;
+    return val % 2;
+  }),
+  L.some(function(val) {
+    return val > 100;
+  }),
+  console.log);
+console.log(mi, fi);
+// 지연평가시 불필요한 반복을 돌지 않고 값 별로 각각 평가하게됨.
+</script>
+
+</body>
+</html>
