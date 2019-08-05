@@ -95,7 +95,6 @@ _go(users,
 _go(users,
     _group_by(function(user) {
         return user.name; // 동일한 이름을 가진 사람이 없으면 한명씩 나올거임.
-
         // return user.name[0]; // 요건 함수형적으로 좋은 아이디어는 아님.
     }),
     console.log);

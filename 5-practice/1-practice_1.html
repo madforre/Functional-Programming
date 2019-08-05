@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../partial.min.js"></script>
+    <script src="../_.js"></script>
+</head>
+<body>
+<script>
+var users = [
+    { id: 101, name: 'ID' },
+    { id: 102, name: 'BJ' },
+    { id: 103, name: 'PJ' },
+    { id: 104, name: 'HA' },
+    { id: 105, name: 'JE' },
+    { id: 106, name: 'JI' },
+];
+
+var posts = [
+    { id: 201, body: '내용1', user_id: 101 },
+    { id: 202, body: '내용2', user_id: 102 },
+    { id: 203, body: '내용3', user_id: 103 },
+    { id: 204, body: '내용4', user_id: 102 },
+    { id: 205, body: '내용5', user_id: 101 },
+];
+
+var comments = [
+ { id: 301, body: '댓글1', user_id: 105, post_id: 201 },
+ { id: 302, body: '댓글2', user_id: 104, post_id: 201 },
+ { id: 303, body: '댓글3', user_id: 104, post_id: 202 },
+ { id: 304, body: '댓글4', user_id: 105, post_id: 203 },
+ { id: 305, body: '댓글5', user_id: 106, post_id: 203 },
+ { id: 306, body: '댓글6', user_id: 106, post_id: 204 },
+ { id: 307, body: '댓글7', user_id: 102, post_id: 205 },
+ { id: 308, body: '댓글8', user_id: 103, post_id: 204 },
+ { id: 309, body: '댓글9', user_id: 103, post_id: 202 },
+ { id: 310, body: '댓글10', user_id: 105, post_id: 201 }
+];
+
+
+console.log(_.contains([1, 2, 6, 10], 5)); // 포함되어 있느냐? true 없으면 false
+
+
+
+
+// 1. 특정인의 posts의 모든 comments 거르기
+
+function posts_by(attr) { // 공통되는 부분 좀 더 간결하게 사용해보기 (2번 문제까지)
+    return _.where(posts, attr);
+}
+
+var comments_by_posts = _.pipe(
+    _.pluck('id'),
+    function(post_ids) {
+        return _.filter(comments, function(comment) {
+            return _.contains(post_ids, comment.post_id); // find 없이 이렇게도 사용가능
+        });
+    });
+
+_.go(
+    _.where(posts, { user_id: 101}), // 내부적으로는 필터를 사용하겠지.
+    // _.filter(posts, function(post){ // filter 특화함수 where로 대체가능
+    //     return post.user_id == 101;
+    // }),
+    _.pluck('id'),
+    // _.map(function(post) { // map은 특화함수인 pluck 로 대체 가능
+    //     return post.id;
+    // }),
+    function(post_ids) {
+        return _.filter(comments, function(comment) {
+            return _.contains(post_ids, comment.post_id); // find 없이 이렇게도 사용가능
+        });
+    },
+    // function(posts) {
+    //     return _.filter(comments, function(comment) {
+    //         return _.find(posts, function(post) {
+    //             return post.id == comment.post_id;
+    //         });
+    //     });
+    // },
+    console.log);
+
+// posts에서 comments 거르기 (중복되는 부분들을 다시 묶어 함수화)
+var f1 = _pipe(posts_by, comments_by_posts); 
+console.log("f1 : ", f1({ user_id: 101 }));
+
+// 2. 특정인의 posts에 comments를 단 친구의 이름들 뽑기
+
+_.go({ user_id: 101 },
+    posts_by, // 내부적으로는 필터를 사용하겠지.
+    comments_by_posts,
+    _.map(function(comment) {
+        return _.find(users, function(user) {
+            return user.id == comment.user_id;
+        }).name;
+    }),
+    _.uniq,
+
+    // 내가 한 방법
+    // _.pluck('user_id'),
+    // function(user_ids) {
+    //     return _.filter(users, function(user) {
+    //         return _.contains(user_ids, user.id);
+    //     })
+    // },
+    // _.pluck('name'),
+    console.log);
+
+var comments_to_user_names = _.map(function(comment) { // 좀더 간단하게
+    return _.find(users, function(user) { // 커링이 되니깐 맵함수에 mapper만 줬음. 
+        return user.id == comment.user_id;
+    }).name;
+});
+
+var f2 = _pipe(
+    f1,
+    comments_to_user_names,
+    _.uniq);
+
+console.log("f2 : ", f2({ user_id: 101 }));
+
+// 3. 특정인의 posts에 comments를 단 친구들 카운트 정보
+
+_.go({ user_id: 101 },
+    posts_by, // 내부적으로는 필터를 사용하겠지.
+    comments_by_posts,
+    _.map(function(comment) {
+        return _.find(users, function(user) {
+            return user.id == comment.user_id;
+        }).name;
+    }),
+    _.uniq,
+    _.count_by,
+    console.log);
+
+var f3 = _pipe(f1, comments_to_user_names, _.count_by);
+
+console.log("f3 : ", f3({ user_id: 101 }));
+
+// 4. 특정인이 comment를 단 posts 거르기
+
+_.go(
+    _.where(comments, {user_id: 105}),
+    _.pluck('post_id'),
+    _.uniq,
+    function(post_ids) {
+        return _.filter(posts, function(post){
+            return _.contains(post_ids, post.id)
+        })
+    },
+    console.log)
+
+
+
+// 간결하게 사용할 수 있도록 posts_by 처럼 함수들을 만들어 보자.
+var comments_by = function(attr){ // 좀 더 간결하게.
+    return _.where(comments, attr)
+};
+
+var posts_by_comments = _.pipe(
+    _.pluck('post_id'),
+    function(post_ids) {
+        return _.filter(posts, function(post) {
+            return _.contains(post_ids, post.id);
+        });
+    })
+
+var f4 = _.pipe(comments_by, posts_by_comments)
+console.log("f4 : ", f4({ user_id: 105 }));
+
+// 5. users + posts + comments (group_by로 효율 높이기)
+// index_by는 underscore에서 indexBy,
+// Lodash는 keyBy 인듯?
+
+// 접근하기 쉽게 데이터 형태들을 바꿔놓고 시작한다면,
+// 효율성이 보다 올라갈 것이다.
+
+// 모든 comments에 유저 정보가 달려 있도록 해보자.
+// 유저들이 달려있는 comments를 만드는데,
+// 원본 comments는 변형이 되지 않도록 만들어보자.
+
+var comments2 = _.map(comments, function(comment) {
+    return _.extend({ // 객체를 확장하는 extend 함수. shallow copy도 해줌.
+        user: _.find(users, function(user) {
+            return user.id == comment.user_id;
+        })
+    }, comment);
+});
+
+function find_user_by_id(user_id) {
+    return _.find(users, function(user) {
+        return user.id == user_id;
+    });
+}
+
+var users2 = _.index_by(users, 'id'); // lodash에서는 아마 keyBy인듯. 언더스코어는 indexBy
+console.log("index_by로 id로 묶어준 users2", users2);
+
+function find_user_by_id(user_id) {
+    return users2[user_id]; // _index_by로 효율 높였음.
+}
+
+comments2 = _.map(comments, function(comment) { // 맵 함수로 each 돌면서 comment마다 추가함.
+    return _.extend({ // 객체를 확장하는 extend 함수. shallow copy도 함.
+        user: find_user_by_id(comment.user_id)
+    }, comment);
+});
+
+// 이번에는 posts안에 comments를 담아보자.
+var posts2 = _.map(posts, function(post) {
+    return _.extend({
+        comments: _.filter(comments, function(comment) {
+            return comment.post_id == post.id
+        }),
+        user: find_user_by_id(post.user_id)
+    }, post);
+});
+
+
+
+// 중첩구조로 모든 데이터가 정리되었다.
+console.log("comment도 추가한 새로운 객체 posts2", posts2);
+
+comments2 = _.go( // 효율을 위해 루프를 줄여보자
+    comments,
+    _.map(function(comment) {
+    return _.extend({
+        user: find_user_by_id(comment.user_id)
+    }, comment);
+    }),
+    _.group_by('post_id')
+);
+console.log("post_id로 그룹지은 comments2 : ", comments2); // post_id로 그룹지어졌다.
+
+posts2 = _.map(posts, function(post) {
+    return _.extend({ // 루프를 한번 더 돌면서 찾지 않고,
+        comments: comments2[post.id], // 1대1로 맵핑하여 찾아준다. 효율 업!
+        // 사실 find_user_by_id 빼고 더 간단하게 가도 됨.
+        user: users2[post.user_id]
+    }, 
+    post);
+});
+console.log("posts2 find_user_by_id 빼봄", posts2);
+
+
+// 이제 결과를 만들어 보자.
+// 이 때 users2는 array가 아니라 object임. (_index_by, keyBy를 써줬으니까.)
+// 함수형 프로그래밍이므로 배열이 아닌 객체여도 each가 루프를 돈다.
+// _.each(users2, function(user) {
+//     user.posts = _.filter(posts2, function(post) {
+//         return post.user_id == user.id;
+//     })
+// })
+
+// console.log("엥 재귀가 되버리네", users2); // 엥? 재귀가 되버리네?
+// JSON.stringify(users2) // -> 에러난다. 계속 순환하기 때문에 string으로 못만들음
+
+// 따라서 값을 직접 변경하는 방식이 아닌, 새로운 객체를 리턴하는 방식으로 만들어야 한다!!
+
+var users3 = _.map(users2, function(user) {
+    return _.extend({
+        posts: _.filter(posts2, function(post) {
+            return post.user_id == user.id;
+        })
+    }, user);
+})
+
+console.log(users3); // 이렇게 하니 참조 연결이 끊어졌음.
+// 참조 값을 잘 다루고, 값을 변형하지 않는 것이
+// 굉장히 많은 문제들을 해결해준다.
+
+// 객체의 Immutability를 지키는 식으로 프로그래밍하자!
+// 불변성 유지!!
+
+// console.log(JSON.stringify(users3)); 이제 출력 된다. (재귀 끊어짐.)
+
+
+// 한가지 아쉬운점? users2의 크기만큼, posts2의 크기만큼 반복을 하게 된다.
+// user_id로 미리 group_by를 해놓게 되면 훨씬 효율이 높아진다.
+
+console.log("group_by 효율화 전", posts2);
+
+posts2 = _.go(
+    posts,
+    _.map(function(post) {
+        return _.extend({
+            comments: comments2[post.id] || [], // 값이 없으면 빈배열 넣는다.
+            user: users2[post.user_id]
+        }, post);
+    }),
+    
+);
+
+var posts3 = _.group_by(posts2, 'user_id') // user_id인 key를 기준으로 그룹화 되었음.
+
+console.log("group_by로 좀 더 효율화시켜보자.", posts3); // 그룹화된 posts2가 출력됨.
+
+users3 = _.map(users2, function(user) {
+    return _.extend({
+        // 루프 한번돌려서 미리 그룹지어놓음. 앞으로는 map 돌때마다
+        // 일일히 filter 루프 안돌려도 됨. 
+        // 1대1로 맵핑하여 계산된 그룹의 키로 찾아주면 됨.
+        // 즉 효율이 증가 !!!!
+        posts: posts3[user.id] || [] // 해당하는 유저의 id로 직접 값을 꺼낸다.
+    }, user);
+})
+
+
+// 기존 값들은 하나도 안망가진 중첩된 구조의 데이터가 탄생하였다.
+// indexBy나 groupBy를 활용하여 반복문을 최소화하고, 코드를 효율적으로 만들었다.
+console.log("효율화 적용된 users3", users3); // 중첩 구조의 데이터가 되었음.
+
+// 5.1. 특정인의 posts의 모든 comments 거르기
+
+_.go(users3, // 내 코드
+    _.where({id: 101}),
+    _.pluck('posts'),
+    _.flatten,
+    _.pluck('comments'),
+    _.flatten,
+    console.log);
+
+
+var user_by_attr = function(users, attr) { // 강의내용에 없는 내가 직접 만들어본 순수함수
+    return _.head(_.where(users, attr));
+}
+
+var user = user_by_attr(users3, {id: 102});
+_.go(user.posts, // 다른 방법
+    _.pluck('comments'),
+    _.flatten,
+    console.log);
+
+// 5.2. 특정인의 posts에 comments를 단 친구의 이름들 뽑기
+user = user_by_attr(users3, {id: 102});
+_.go(user.posts,
+    _.pluck('comments'),
+    _.flatten,
+    _.pluck('user'),
+    _.pluck('name'),
+    _.uniq,
+    console.log);
+
+// 5.3. 특정인의 posts에 comments를 단 친구들 카운트 정보
+user = user_by_attr(users3, {id: 101});
+_.go(user.posts,
+    _.pluck('comments'),
+    _.flatten,
+    _.pluck('user'),
+    _.pluck('name'),
+    _.count_by,
+    console.log);
+
+// 5.4. 특정인이 comment를 단 posts 거르기
+
+console.log(posts2);
+
+console.log( // 단 하나라도 특정인이 단 comment가 있는 posts들을 뽑는다.
+    _.filter(posts2, function(post) {
+        return _.find(post.comments, function(comment) {
+            return comment.user_id == 105;
+        })
+    })
+);
+
+// 값의 상태를 직접 바꾸지 않고 값을 원래 상태로 유지하면서
+// 프로그래밍 하면 유리한 점이 많이 생긴다.
+// 굉장히 편하고 쉽게 문제들을 해결할 수 있음.
+
+// 덤으로 알아두자면 유니크는 reduce로 만들어짐.
+// 지금까지 지저분한 반복문 코드 없이 깔끔하게 함수형 프로그래밍을 해보았다.
+</script>
+</body>
+</html>
