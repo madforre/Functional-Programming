@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>비동기</title>
+    <script src="../partial.min.js"></script>
+    <script src="../_.js"></script>
+</head>
+<body>
+<script>
+
+// ES5 는 아님. Promise 객체 관련 학습임.
+// Promise 는 javascript library 로 제공되기 시작했으며,
+// 현재는 ES6 부터는 언어 레벨에서 제공하는 기능입니다.
+
+function square(a) {
+    return new Promise(function(resolve) {
+        setTimeout(function() {
+            resolve(a * a);
+        }, 500);
+    })
+}
+
+// 코드가 동기적으로 동작하지 않고 순서와 상관없이 비동기적으로 동작하기 때문에
+// 코드의 순서를 개발자가 잘 제어해야하는 어려움이 있습니다.
+// 일반 콜백 함수만으로는 어려움이 있는데, promise로 일정 부분 해결되었음.
+
+// 콘솔 찍히는 순서를 봅시다.
+// console.log(1);
+// square(10).then(function(response) {
+//     console.log(2);
+//     console.log(response); // 잘 동작하네용
+// })
+// console.log(3); // 1, 3, 2, 100 찍힘.
+
+
+// 1, 2, 3을 순서대로 찍고 싶다면?
+// console.log(1);
+// square(10)
+//     .then(function(response) {
+//         console.log(2);
+//         console.log(response); // 잘 동작하네용 1, 2, 100, 3
+//     }).then(function() {
+//         console.log(3)
+//     });
+
+// square(10) // pending 후 fulfilled 후 대기 현재 100
+//     .then(square) // fulfilled 이행 후 대기 100 * 100
+//     .then(square) // fulfilled, pending 10000 * 10000
+//     .then(square) // fulfilled, pending 100000000 * 100000000
+//     .then(console.log); // fulfilled 결과 10000000000000000 나온다.
+
+
+// 장점? square가 즉시 평가되는 함수더라도 코드의 변화가 필요없음.
+
+// function square(a) { // 요렇게 함수가 바뀌어도 아래의 go 코드에서는 에러가 나지 않는다.
+//     return a * a;
+// }
+
+// 함수형 프로그래밍으로 좀더 간결하게, 동일한 표현이 가능하다.
+// _.go(square(10),
+//     square,
+//     square,
+//     square,
+//     console.log);
+
+
+// 보다 좀 복잡한 로직 안에서의 비동기 처리 상황에서는
+// promise만으로는 처리하기 까다로운 상황이 있다.
+var list = [2, 3, 4];
+new Promise(function(resolve) {
+    (function recur(res) {
+        if (list.length == res.length) return resolve(res);
+        square(list[res.length]).then(function(val) {
+            res.push(val);
+            recur(res);
+        })
+    })([]);
+}).then(console.log); // 이렇게 작성하는 것은 명령형 프로그래밍입니다.
+
+// 비동기 상황을 좀 더 쉽게 함수형 프로그래밍으로 제어해보자!
+_.go(list,
+    _.map(square), // 위의 코드와 완전히 동일한 일을 하고 있음!!!
+    _.map(square), 
+    _.map(square), // 연속적으로도 쉽게 사용 가능하다.
+    console.log); // 동일한 결과가 나온다!
+
+
+// 필요한 로직을 항상 구현하는 것보다,
+// 이미 만들어진 함수형 함수나 고차함수를 통해서 프로그래밍하는 것이 
+// 훨씬 간결하고 쉽습니다.
+
+// 클로저에서처럼 map을 pmap으로 바꾼다거나,
+// 즉시평가를 지연평가로 바꾼다거나, reduce를 r fold로
+// 바꾸는 것 같이 병렬처리를 쉽게하거나 동시성 프로그래밍을 제어하는 것들을
+// 굉장히 쉽게 할 수 있다!
+
+// 언제 평가해도 상관없는 함수들을 만들게 되면
+// 고차함수들과 조합을 할 수 있게 되고,
+// 고차함수가 비동기 상황을 대신해서 동기적으로 제어해준다던지 등등
+// 프로그래밍을 하기가 굉장히 쉬워집니다.
+
+
+
+</script>
+</body>
