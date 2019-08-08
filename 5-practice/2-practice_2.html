@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../partial.min.js"></script>
+    <script src="../_.js"></script>
+</head>
+<body>
+<script>
+// 커머스 서비스를 운영한다고 가정해보자.
+
+// 장바구니라고 가정.
+var products = [
+    {
+        is_selected: true, // <-- 장바구니에서 체크박스 선택
+        name: "반팔티",
+        price: 10000, // <-- 기본 가격
+        sizes: [ // <---- 장바구니에 담은 동일 상품의 사이즈 별 수량과 가격
+            { name: "L", quantity: 2, price: 0 },
+            { name: "XL", quantity: 3, price: 0 },
+            { name: "2XL", quantity: 2, price: 2000 }, // <-- 옵션의 추가 가격
+        ]
+    },
+    {
+        is_selected: true,
+        name: "후드티",
+        price: 21000,
+        sizes: [
+            { name: "L", quantity: 3, price: -1000 },
+            { name: "2XL", quantity: 4, price: 2000 },
+        ]
+    },
+    {
+        is_selected: false,
+        name: "맨투맨",
+        price: 16000,
+        sizes: [
+            { name: "L", quantity: 10, price: 0 },
+        ]
+    },
+];
+
+// 총 수량과 총 가격을 보여주는 프로그램이 있다고 가정하고
+// 코드의 조각을 작성해보자.
+
+// 1. 모든 수량
+// 모든 quantity들이 더해져야함.
+
+_.go(products, // 내가 짜본 코드
+    _.pluck('sizes'),
+    _.map(_.pluck('quantity')),
+    _.map(function(quantities){
+        return _.reduce(quantities, function(a, b){
+            return a + b;
+        })
+    }),
+    _.reduce(function(a, b){
+        return a + b;
+    }),
+    // console.log
+)   
+
+console.log(products);
+
+// _.go(products,
+//     _.reduce(function(tq, product) { // total_quantities, product
+//         return tq + _.reduce(product.sizes, function(tq, size) {
+//             return tq + size.quantity;
+//         }, 0)
+//     }, 0),
+//     console.log);
+
+_.go(products,
+    _.reduce(function(tq, product) { // total_quantities, product
+        return _.reduce(product.sizes, function(tq, size) {
+            return tq + size.quantity;
+        }, tq)
+    }, 0),
+    console.log);
+
+
+// 2. 선택 된 총 수량
+
+_.go(products, // 짜본 코드
+    _.reduce(function(tq, product){
+        return _.reduce(product.sizes, function(tq, size) {
+            return product.is_selected ? tq + size.quantity : tq + 0;
+        }, tq)
+    }, 0),
+    console.log);
+
+
+var total_quantity = _.reduce(function(tq, product) {
+        return _.reduce(product.sizes, function(tq, size) {
+            return tq + size.quantity;
+        }, tq);
+    }, 0);
+
+_.go(products,
+    // _.filter(function(product){ return product.is_selected; }),
+    _.filter(_get('is_selected')),
+    total_quantity, // 조립을 통한 함수 조합
+    console.log);
+    // 이런식으로 조립하면서 프로그래밍 하는 것이 함수형 프로그래밍입니다.
+
+
+// 3. 모든 가격
+
+_.go(products,
+    _.reduce(function(tp, product) {
+        return _.reduce(product.sizes, function(tp, size){
+            return tp + ((product.price + size.price) * size.quantity);
+        }, tp)
+    }, 0),
+    console.log);
+
+    // 리듀스가 순회하면서 값을 합산해 나갈때에는 무조건 더하기를 하겠죠?
+    // 기존에 합산되던 값을 이어주면 됩니다. (tq, tp 처럼)
+
+    // 순회할 때의 명령적 코드가 사라지기 때문에, 과제에 집중할 수 있고,
+    // 문제 해결이 쉬워지게 됩니다.
+
+var total_price = _.reduce(function(tp, product) {
+        return _.reduce(product.sizes, function(tp, size){
+            return tp + (product.price + size.price) * size.quantity;
+        }, tp);
+    }, 0);
+
+// 4. 선택 된 총 가격
+
+_.go(products,
+    _.filter(_get('is_selected')),
+    total_price,
+    console.log);
+
+</script>
+</body>
